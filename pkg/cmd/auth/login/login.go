@@ -1,5 +1,4 @@
-package login
-
+pac
 import (
 	"fmt"
 	"io"
@@ -38,6 +37,7 @@ type LoginOptions struct {
 	GitProtocol      string
 	InsecureStorage  bool
 	SkipSSHKeyPrompt bool
+	NoInsecureFallback bool
 }
 
 func NewCmdLogin(f *cmdutil.Factory, runF func(*LoginOptions) error) *cobra.Command {
@@ -153,6 +153,7 @@ func NewCmdLogin(f *cmdutil.Factory, runF func(*LoginOptions) error) *cobra.Comm
 
 	cmd.Flags().BoolVar(&opts.InsecureStorage, "insecure-storage", false, "Save authentication credentials in plain text instead of credential store")
 	cmd.Flags().BoolVar(&opts.SkipSSHKeyPrompt, "skip-ssh-key", false, "Skip generate/upload SSH key prompt")
+	cmd.Flags().BoolVar(&opts.NoInsecureFallback, "no-insecure-fallback", false, "Do not fall back to insecure storage if keyring is unavailable")
 
 	return cmd
 }
@@ -199,7 +200,7 @@ func loginRun(opts *LoginOptions) error {
 		}
 
 		// Adding a user key ensures that a nonempty host section gets written to the config file.
-		_, loginErr := authCfg.Login(hostname, username, opts.Token, opts.GitProtocol, !opts.InsecureStorage)
+		_, loginErr := authCfg.Login(hostname, username, opts.Token, opts.GitProtocol, !opts.InsecureStorage, opts.NoInsecureFallback)
 		return loginErr
 	}
 
