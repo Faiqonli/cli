@@ -311,7 +311,7 @@ func (c *AuthConfig) SetDefaultHost(host, source string) {
 // Login will set user, git protocol, and auth token for the given hostname.
 // If the encrypt option is specified it will first try to store the auth token
 // in encrypted storage and will fall back to the plain text config file.
-func (c *AuthConfig) Login(hostname, username, token, gitProtocol string, secureStorage bool) (bool, error) {
+func (c *AuthConfig) Login(hostname, username, token, gitProtocol string, secureStorage bool, noInsecureFallback bool) (bool, error) {
 	// In this section we set up the users config
 	var setErr error
 	if secureStorage {
@@ -324,6 +324,9 @@ func (c *AuthConfig) Login(hostname, username, token, gitProtocol string, secure
 	}
 	insecureStorageUsed := false
 	if !secureStorage || setErr != nil {
+		if noInsecureFallback {
+			return false, fmt.Errorf("failed to store token securely: %v", setErr)
+		}
 		// And set the oauth token under the user for later switching
 		c.cfg.Set([]string{hostsKey, hostname, usersKey, username, oauthTokenKey}, token)
 		insecureStorageUsed = true
