@@ -55,7 +55,7 @@ func TestTokenFromKeyringForUserErrorsIfUsernameIsBlank(t *testing.T) {
 func TestHasActiveToken(t *testing.T) {
 	// Given the user has logged in for a host
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "", false, false)
 	require.NoError(t, err)
 
 	// When we check if that host has an active token
@@ -79,7 +79,7 @@ func TestHasNoActiveToken(t *testing.T) {
 func TestTokenStoredInConfig(t *testing.T) {
 	// Given the user has logged in insecurely
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "", false, false)
 	require.NoError(t, err)
 
 	// When we get the token
@@ -109,7 +109,7 @@ func TestTokenStoredInEnv(t *testing.T) {
 func TestTokenStoredInKeyring(t *testing.T) {
 	// When the user has logged in securely
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "", true)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "", true, false)
 	require.NoError(t, err)
 
 	// When we get the token
@@ -162,7 +162,7 @@ func TestHasEnvTokenWithNoEnvTokenButAConfigVar(t *testing.T) {
 	// Given a token in the config
 	authCfg := newTestAuthConfig(t)
 	// Using example.com here will cause the token to be returned from the config
-	_, err := authCfg.Login("example.com", "test-user", "test-token", "", false)
+	_, err := authCfg.Login("example.com", "test-user", "test-token", "", false, false)
 	require.NoError(t, err)
 
 	// When we check if it has an env token
@@ -224,7 +224,7 @@ func TestDefaultHostNotLoggedIn(t *testing.T) {
 func TestDefaultHostLoggedInToOnlyOneHost(t *testing.T) {
 	// Given we are logged into one host (not github.com to differentiate from the fallback)
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("ghe.io", "test-user", "test-token", "", false)
+	_, err := authCfg.Login("ghe.io", "test-user", "test-token", "", false, false)
 	require.NoError(t, err)
 
 	// When we get the DefaultHost
@@ -243,7 +243,7 @@ func TestLoginSecureStorageUsesKeyring(t *testing.T) {
 	token := "test-token"
 
 	// When we login with secure storage
-	insecureStorageUsed, err := authCfg.Login(host, user, token, "", true)
+	insecureStorageUsed, err := authCfg.Login(host, user, token, "", true, false)
 
 	// Then it returns success, notes that insecure storage was not used, and stores the token in the keyring
 	require.NoError(t, err)
@@ -264,7 +264,7 @@ func TestLoginSecureStorageRemovesOldInsecureConfigToken(t *testing.T) {
 	authCfg.cfg.Set([]string{hostsKey, "github.com", oauthTokenKey}, "old-token")
 
 	// When we login with secure storage
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "", true)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "", true, false)
 
 	// Then it returns success, having also removed the old token from the config
 	require.NoError(t, err)
@@ -277,7 +277,7 @@ func TestLoginSecureStorageWithErrorFallsbackAndReports(t *testing.T) {
 	keyring.MockInitWithError(errors.New("test-explosion"))
 
 	// When we login with secure storage
-	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", true)
+	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", true, false)
 
 	// Then it returns success, reports that insecure storage was used, and stores the token in the config
 	require.NoError(t, err)
@@ -291,7 +291,7 @@ func TestLoginInsecureStorage(t *testing.T) {
 	authCfg := newTestAuthConfig(t)
 
 	// When we login with insecure storage
-	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", false)
+	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", false, false)
 
 	// Then it returns success, notes that insecure storage was used, and stores the token in the config
 	require.NoError(t, err)
@@ -305,7 +305,7 @@ func TestLoginSetsUserForProvidedHost(t *testing.T) {
 	authCfg := newTestAuthConfig(t)
 
 	// When we login
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false, false)
 
 	// Then it returns success and the user is set
 	require.NoError(t, err)
@@ -318,7 +318,7 @@ func TestLoginSetsUserForProvidedHost(t *testing.T) {
 func TestLoginSetsGitProtocolForProvidedHost(t *testing.T) {
 	// Given we are logged in
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we get the host git protocol
@@ -332,7 +332,7 @@ func TestLoginSetsGitProtocolForProvidedHost(t *testing.T) {
 func TestLoginAddsHostIfNotAlreadyAdded(t *testing.T) {
 	// Given we are logged in
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we get the hosts
@@ -349,7 +349,7 @@ func TestLoginAddsUserToConfigWithoutGitProtocolAndWithSecureStorage(t *testing.
 	authCfg := newTestAuthConfig(t)
 
 	// When we log in without git protocol and with secure storage
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "", true)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "", true, false)
 	require.NoError(t, err)
 
 	// Then the username is added under the users config
@@ -365,7 +365,7 @@ func TestLogoutRemovesHostAndKeyringToken(t *testing.T) {
 	user := "test-user"
 	token := "test-token"
 
-	_, err := authCfg.Login(host, user, token, "ssh", true)
+	_, err := authCfg.Login(host, user, token, "ssh", true, false)
 	require.NoError(t, err)
 
 	// When we logout
@@ -384,10 +384,10 @@ func TestLogoutRemovesHostAndKeyringToken(t *testing.T) {
 func TestLogoutOfActiveUserSwitchesUserIfPossible(t *testing.T) {
 	// Given we have two accounts logged into a host
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "inactive-user", "test-token-1", "ssh", true)
+	_, err := authCfg.Login("github.com", "inactive-user", "test-token-1", "ssh", true, false)
 	require.NoError(t, err)
 
-	_, err = authCfg.Login("github.com", "active-user", "test-token-2", "https", true)
+	_, err = authCfg.Login("github.com", "active-user", "test-token-2", "https", true, false)
 	require.NoError(t, err)
 
 	// When we logout of the active user
@@ -410,13 +410,13 @@ func TestLogoutOfActiveUserSwitchesUserIfPossible(t *testing.T) {
 func TestLogoutOfInactiveUserDoesNotSwitchUser(t *testing.T) {
 	// Given we have two accounts logged into a host
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "inactive-user-1", "test-token-1.1", "ssh", true)
+	_, err := authCfg.Login("github.com", "inactive-user-1", "test-token-1.1", "ssh", true, false)
 	require.NoError(t, err)
 
-	_, err = authCfg.Login("github.com", "inactive-user-2", "test-token-1.2", "ssh", true)
+	_, err = authCfg.Login("github.com", "inactive-user-2", "test-token-1.2", "ssh", true, false)
 	require.NoError(t, err)
 
-	_, err = authCfg.Login("github.com", "active-user", "test-token-2", "https", true)
+	_, err = authCfg.Login("github.com", "active-user", "test-token-2", "https", true, false)
 	require.NoError(t, err)
 
 	// When we logout of an inactive user
@@ -452,9 +452,9 @@ func TestLogoutIgnoresErrorsFromConfigAndKeyring(t *testing.T) {
 func TestSwitchUserMakesSecureTokenActive(t *testing.T) {
 	// Given we have a user with a secure token
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true, false)
 	require.NoError(t, err)
 
 	// When we switch to that user
@@ -469,9 +469,9 @@ func TestSwitchUserMakesSecureTokenActive(t *testing.T) {
 func TestSwitchUserMakesInsecureTokenActive(t *testing.T) {
 	// Given we have a user with an insecure token
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we switch to that user
@@ -486,9 +486,9 @@ func TestSwitchUserMakesInsecureTokenActive(t *testing.T) {
 func TestSwitchUserUpdatesTheActiveUser(t *testing.T) {
 	// Given we have two users logged into a host
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we switch to the other user
@@ -504,9 +504,9 @@ func TestSwitchUserErrorsImmediatelyIfTheActiveTokenComesFromEnvironment(t *test
 	// Given we have a token in the env
 	authCfg := newTestAuthConfig(t)
 	t.Setenv("GH_TOKEN", "unimportant-test-value")
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true, false)
 	require.NoError(t, err)
 
 	// When we switch to a user
@@ -519,9 +519,9 @@ func TestSwitchUserErrorsImmediatelyIfTheActiveTokenComesFromEnvironment(t *test
 func TestSwitchUserErrorsAndRestoresUserAndInsecureConfigUnderFailure(t *testing.T) {
 	// Given we have a user but no token can be found (because we deleted them, simulating an error case)
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false, false)
 	require.NoError(t, err)
 
 	require.NoError(t, keyring.Delete(keyringServiceName("github.com"), "test-user-1"))
@@ -545,9 +545,9 @@ func TestSwitchUserErrorsAndRestoresUserAndInsecureConfigUnderFailure(t *testing
 func TestSwitchUserErrorsAndRestoresUserAndKeyringUnderFailure(t *testing.T) {
 	// Given we have a user but no token can be found (because we deleted them, simulating an error case)
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true, false)
 	require.NoError(t, err)
 
 	require.NoError(t, authCfg.cfg.Remove([]string{hostsKey, "github.com", usersKey, "test-user-1", oauthTokenKey}))
@@ -571,9 +571,9 @@ func TestSwitchUserErrorsAndRestoresUserAndKeyringUnderFailure(t *testing.T) {
 func TestSwitchClearsActiveSecureTokenWhenSwitchingToInsecureUser(t *testing.T) {
 	// Given we have an active secure token
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", false, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", true, false)
 	require.NoError(t, err)
 
 	// When we switch to an insecure user
@@ -587,9 +587,9 @@ func TestSwitchClearsActiveSecureTokenWhenSwitchingToInsecureUser(t *testing.T) 
 func TestSwitchClearsActiveInsecureTokenWhenSwitchingToSecureUser(t *testing.T) {
 	// Given we have an active insecure token
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token-1", "ssh", true, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token-2", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we switch to a secure user
@@ -613,9 +613,9 @@ func TestUsersForHostNoHost(t *testing.T) {
 func TestUsersForHostWithUsers(t *testing.T) {
 	// Given we have a config with a host and users
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token", "ssh", false, false)
 	require.NoError(t, err)
-	_, err = authCfg.Login("github.com", "test-user-2", "test-token", "ssh", false)
+	_, err = authCfg.Login("github.com", "test-user-2", "test-token", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we get the users for that host
@@ -628,7 +628,7 @@ func TestUsersForHostWithUsers(t *testing.T) {
 func TestTokenForUserSecureLogin(t *testing.T) {
 	// Given a user has logged in securely
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token", "ssh", true)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token", "ssh", true, false)
 	require.NoError(t, err)
 
 	// When we get the token
@@ -643,7 +643,7 @@ func TestTokenForUserSecureLogin(t *testing.T) {
 func TestTokenForUserInsecureLogin(t *testing.T) {
 	// Given a user has logged in insecurely
 	authCfg := newTestAuthConfig(t)
-	_, err := authCfg.Login("github.com", "test-user-1", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user-1", "test-token", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we get the token
@@ -664,6 +664,19 @@ func TestTokenForUserNotFoundErrors(t *testing.T) {
 
 	// Then it returns an error
 	require.EqualError(t, err, "no token found for 'test-user-1'")
+}
+
+func TestLoginNoInsecureFallback(t *testing.T) {
+	// Given a keyring that errors
+	authCfg := newTestAuthConfig(t)
+	keyring.MockInitWithError(errors.New("test-explosion"))
+
+	// When we login with secure storage and no insecure fallback
+	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", true, true)
+
+	// Then it returns an error and does not use insecure storage
+	require.Error(t, err)
+	require.False(t, insecureStorageUsed, "expected not to use insecure storage")
 }
 
 func requireKeyWithValue(t *testing.T, cfg *ghConfig.Config, keys []string, value string) {
@@ -799,7 +812,7 @@ func TestLoginInsecurePostMigrationUsesConfigForToken(t *testing.T) {
 	c := cfg{authCfg.cfg}
 	require.NoError(t, c.Migrate(m))
 
-	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", false)
+	insecureStorageUsed, err := authCfg.Login("github.com", "test-user", "test-token", "", false, false)
 
 	// Then it returns success, notes that insecure storage was used, and stores the token in the config
 	// both under the host and under the user
@@ -818,7 +831,7 @@ func TestLoginPostMigrationSetsGitProtocol(t *testing.T) {
 	c := cfg{authCfg.cfg}
 	require.NoError(t, c.Migrate(m))
 
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we get the host git protocol
@@ -837,7 +850,7 @@ func TestLoginPostMigrationSetsUser(t *testing.T) {
 	c := cfg{authCfg.cfg}
 	require.NoError(t, c.Migrate(m))
 
-	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false)
+	_, err := authCfg.Login("github.com", "test-user", "test-token", "ssh", false, false)
 	require.NoError(t, err)
 
 	// When we get the user
@@ -859,7 +872,7 @@ func TestLoginSecurePostMigrationRemovesTokenFromConfig(t *testing.T) {
 	c := cfg{authCfg.cfg}
 	require.NoError(t, c.Migrate(m))
 
-	_, err = authCfg.Login("github.com", "test-user", "test-token", "", true)
+	_, err = authCfg.Login("github.com", "test-user", "test-token", "", true, false)
 
 	// Then it returns success, having removed the old insecure oauth token entry
 	require.NoError(t, err)
